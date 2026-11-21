@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Politges, polispast, cargol elevador i objectiu final
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';

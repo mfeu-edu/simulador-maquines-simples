@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Dades de l'activitat: objectius, catàleg de peces i reptes (tot en català)
 
 export const TASKS = [
@@ -40,7 +41,7 @@ export const CATALOG = [
     use: 'Deixa caure una bola o un pes sobre el mànec rosa (dreta): la fulla de l\'esquerra puja, talla la corda i el pes penjat cau. Posa una rampa o altres peces sota el pes perquè la màquina continuï.' },
   { t: 'carreto', cat: 'Palanques', n: 'Carretó', maq: 'Palanca de 2n grau', cl: 2,
     d: 'Un carretó amb la roda (punt de suport) a l\'esquerra i els mànecs a la dreta.',
-    use: 'Posa-hi una bola a dins. Si s\'alcen els mànecs (dreta), el carretó bolca cap endavant i la bola surt cap a l\'esquerra. Per alçar els mànecs: col·loca un balancí amb un extrem just sota la punta dels mànecs (a la dreta del petit suport) i deixa caure la bola pesada a l\'altre extrem. També els pot alçar la càrrega (C) d\'una politja o d\'un polispast col·locada sota la punta dels mànecs, o el cargol elevador.' },
+    use: 'Posa-hi una bola a dins. Si s\'alcen els mànecs (dreta), el carretó bolca cap endavant i la bola surt cap a l\'esquerra. Per alçar els mànecs: col·loca un balancí amb un extrem just sota la punta dels mànecs i deixa caure la bola pesada a l\'altre extrem. També els pot alçar la càrrega (C) d\'una politja o d\'un polispast col·locada sota la punta dels mànecs, o el cargol elevador.' },
   { t: 'porta', cat: 'Palanques', n: 'Porta batent', maq: 'Palanca de 2n grau', cl: 2,
     d: 'Una porta penjada per dalt (la frontissa és el punt de suport) que només s\'obre cap a la dreta.',
     use: 'Una bola que ve de l\'esquerra la toca per baix i l\'obre; la porta torna enrere i no deixa passar res en sentit contrari. Col·loca-la perquè l\'extrem de baix quedi a l\'alçada de la bola (la frontissa, uns 3,5 per sobre del terra). També pots empènyer-la amb una altra peça.' },

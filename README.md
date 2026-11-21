@@ -1,6 +1,6 @@
 # Màquina de Rube Goldberg (amb màquines simples)
 
-Simulador web 2,5D i activitat pràctica de la unitat de **Màquines simples** (3r d'ESO, Tecnologia i Digitalització). L'alumnat, en parelles, construeix una màquina de Rube Goldberg que acaba fent una tasca útil (marcar un gol, regar una planta, reciclar un envàs...) i després analitza les màquines simples que hi ha fet servir.
+Simulador web 2,5D i activitat de tancament de la unitat de **Màquines simples** (3r d'ESO, Tecnologia i Digitalització). L'alumnat, en parelles, construeix una màquina de Rube Goldberg que acaba fent una tasca útil (marcar un gol, regar una planta, reciclar un envàs...) i després analitza les màquines simples que hi ha fet servir.
 
 - Competència avaluada: **TiD-CA4.2** (eines digitals col·laboratives per representar esquemes tècnics).
 - Sense comptes ni dades personals: l'«enllaç de la màquina» guarda la posició de les peces dins de la mateixa adreça.
@@ -41,6 +41,7 @@ L'enllaç dels trams del tauler (Tram A / Tram B) és opcional i no puntua, perq
 | [Plantilla_infografia_Rube_Goldberg.pptx](docs/Plantilla_infografia_Rube_Goldberg.pptx) | Plantilla de presentació que omple l'alumnat |
 | [Exemple_resolt_Rube_Goldberg.pptx](docs/Exemple_resolt_Rube_Goldberg.pptx) | Exemple resolt d'una parella fictícia |
 | [Guia_maquines_simples.docx](docs/Guia_maquines_simples.docx) | Guia (xuleta) opcional: peces i màquines simples, graus de palanca, distàncies i exemple de càlcul |
+| [Guia_GitHub_Pages.docx](docs/Guia_GitHub_Pages.docx) | Com publicar i actualitzar el simulador a GitHub Pages |
 
 ## Controls del simulador
 
@@ -55,6 +56,10 @@ L'enllaç dels trams del tauler (Tram A / Tram B) és opcional i no puntua, perq
 ## Publicar-lo
 
 No funciona obrint `index.html` directament del disc (els navegadors bloquegen els mòduls): cal publicar-lo amb GitHub Pages (vegeu la guia a `docs/`) o servir-lo en local amb `python3 -m http.server`. El fitxer `.nojekyll` ha de ser a l'arrel.
+
+## Llicència
+
+Simulador sota llicència **GNU AGPL v3** (vegeu el fitxer `LICENSE`). Pots reutilitzar-lo i adaptar-lo; si el publiques modificat, has de mantenir la mateixa llicència i oferir-ne el codi. Cada fitxer porta la línia `SPDX-License-Identifier: AGPL-3.0-only`.
 
 ## Llibreries
 

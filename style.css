@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;font-family:system-ui,Segoe UI,Arial,sans-serif;background:#0f1724;color:#e8edf5}
 body{display:flex;flex-direction:column}
@@ -103,3 +104,6 @@ button.light.active{background:#ffb457;border-color:#fff;color:#2b1700}
 @media(pointer:coarse){button,select{min-height:36px}.sep{display:none}}
 #anaBody .mq.good{border-left:4px solid #1f9d62}
 #anaBody .mq.bad{border-left:4px solid #6b7a99}
+
+#foot{flex:none;text-align:center;font-size:12px;color:#9db4d8;background:#0d1626;border-top:1px solid #2a3b5a;padding:4px 8px}
+#foot a{color:#ffd25e}

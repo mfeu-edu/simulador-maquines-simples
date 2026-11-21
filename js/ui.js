@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Components d'interfície: paleta, inspector, anàlisi i reptes
 import { CATALOG, CHALLENGES } from './data.js';
 

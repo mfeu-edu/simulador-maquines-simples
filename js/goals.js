@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Objectius finals: cada tasca es representa amb un objecte 3D senzill que reacciona quan la màquina arriba a l'objectiu
 import * as THREE from 'three';
 

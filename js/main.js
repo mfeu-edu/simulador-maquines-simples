@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 import { TASKS, CATALOG, CHALLENGES } from './data.js';

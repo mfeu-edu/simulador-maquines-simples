@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Constructors de peces: cada peça crea malles (Three.js) i cossos (cannon-es) dins del pla z=0
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
