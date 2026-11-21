@@ -1,6 +1,6 @@
 # Màquina de Rube Goldberg (amb màquines simples)
 
-Simulador 2,5D per a l'activitat de tancament de la unitat de **Màquines simples** (3r d'ESO, Tecnologia i Digitalització).
+Simulador 2,5D per a l'activitat de pràctica de la unitat de **Màquines simples** (3r d'ESO, Tecnologia i Digitalització).
 L'alumnat construeix una màquina de Rube Goldberg amb palanques, rampes, politges, cargol i dòminos.
 
 - **Sessió 1:** obre `index.html` (noms quotidians de les peces).
