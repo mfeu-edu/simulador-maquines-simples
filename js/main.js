@@ -2,16 +2,15 @@ import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 import { TASKS, CATALOG, CHALLENGES } from './data.js';
 import { buildPiece } from './pieces.js';
-import { buildPalette, renderInspector, renderChallenges, reqOk } from './ui.js';
+import { buildPalette, renderInspector, renderChallenges, renderAnalysis, reqOk } from './ui.js';
 import { encodeState, decodeState } from './link.js';
 
 const $ = id => document.getElementById(id);
 const Q = new URLSearchParams(location.search);
-const ANALITZA = Q.has('analitza');
 const W = 28, HH = 16, SNAP = 0.5, MAXP = 30, MID = W / 2;
 const DEFROT = { rampa: -20, rampaL: -15 };
 
-const state = { pieces: [], task: 0, zone: 'all', next: 1, sel: null, tool: null, playing: false, won: false, cinema: false };
+const state = { analyze: Q.has('analitza'), pieces: [], task: 0, zone: 'all', next: 1, sel: null, tool: null, playing: false, won: false, cinema: false };
 const done = new Set();
 try { JSON.parse(localStorage.getItem('mq_ch2') || '[]').forEach(i => done.add(i)); } catch (e) { /* res */ }
 
@@ -19,6 +18,7 @@ try { JSON.parse(localStorage.getItem('mq_ch2') || '[]').forEach(i => done.add(i
 const canvas = $('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: false });
 let light = Q.has('lleuger');
+try { if (localStorage.getItem('mq_light') === '1') light = true; } catch (e) { /* res */ }
 renderer.shadowMap.enabled = !light;
 renderer.setPixelRatio(light ? 1 : Math.min(devicePixelRatio, 1.5));
 const scene = new THREE.Scene();
@@ -51,7 +51,7 @@ ghost.visible = false; ghost.renderOrder = 20; scene.add(ghost);
 const selBox = new THREE.Box3Helper(new THREE.Box3(), 0xffd25e); selBox.visible = false; scene.add(selBox);
 
 // ---------- Món físic ----------
-const ctx = { scene, world: null, parts: [], extra: [], markers: [], ticks: [], upds: [], info: {}, mat, task: TASKS[0], onSuccess, showMarks: () => $('markChk').checked };
+const ctx = { scene, world: null, parts: [], extra: [], markers: [], ticks: [], upds: [], info: {}, mat, task: TASKS[0], onSuccess, showMarks: () => state.analyze };
 
 function clearWorld() {
   for (const p of ctx.parts) { scene.remove(p.mesh); p.mesh.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
@@ -101,21 +101,16 @@ function onSuccess() {
 // ---------- Selecció i inspector ----------
 function updateSel() {
   const p = state.pieces.find(q => q.id === state.sel);
-  if (!p) { selBox.visible = false; $('insBody').textContent = 'Prem el botó Cursor i fes clic en una peça del tauler.'; return; }
+  if (!p) { selBox.visible = false; $('insBody').textContent = 'Prem el botó Cursor i fes clic en una peça del tauler per saber què fa i com s\'utilitza.'; return; }
   scene.updateMatrixWorld(true);
   const box = new THREE.Box3();
   scene.traverse(o => { if (o.userData.pid === p.id && o.isMesh) box.expandByObject(o); });
   if (!box.isEmpty()) { selBox.box.copy(box); selBox.visible = true; }
-  renderInspector($('insBody'), p, ctx.info[p.id], ANALITZA);
+  renderInspector($('insBody'), p, ctx.info[p.id], state.analyze);
 }
 function updateCount() {
-  let s = `Peces: ${state.pieces.length} / ${MAXP}`;
-  if (ANALITZA) {
-    const t = {}; state.pieces.forEach(p => { const m = CATALOG.find(c => c.t === p.t).maq; if (!/^No és|^Final/.test(m)) t[m] = (t[m] || 0) + 1; });
-    const l = Object.entries(t).map(([k, v]) => `${k} ×${v}`).join(' · ');
-    if (l) s += '<br>' + l;
-  }
-  $('count').innerHTML = s;
+  $('count').textContent = `Peces: ${state.pieces.length} / ${MAXP}`;
+  if (state.analyze) renderAnalysis($('anaBody'), state.pieces);
 }
 
 // ---------- Interacció ----------
@@ -149,17 +144,16 @@ canvas.addEventListener('contextmenu', e => e.preventDefault());
 canvas.addEventListener('pointerdown', e => {
   canvas.setPointerCapture(e.pointerId);
   if (e.button === 2) { orbit = { x: e.clientX, y: e.clientY, az: cam.az, el: cam.el }; return; }
-  if (state.playing) return;
+  if (state.playing) { if (state.tool || pick(e)) toast('Per afegir, moure o girar peces, primer prem ⟲ Reinicia: la simulació ha d\'estar aturada.'); return; }
   const pt = worldPt(e);
   if (state.tool) {
     if (state.pieces.length >= MAXP) { say('Has arribat al màxim de peces (30).'); return; }
     const c = clampPt(pt, state.tool);
-    const p = { id: state.next++, t: state.tool, x: c.x, y: c.y, r: DEFROT[state.tool] ?? 0, m: 0 };
-    state.pieces.push(p); state.sel = p.id; rebuild(); return;
+    mutate(() => { const p = { id: state.next++, t: state.tool, x: c.x, y: c.y, r: DEFROT[state.tool] ?? 0, m: 0 }; state.pieces.push(p); state.sel = p.id; }); return;
   }
   const id = pick(e);
   state.sel = id; updateSel();
-  if (id) { const p = state.pieces.find(q => q.id === id); drag = { id, dx: p.x - pt.x, dy: p.y - pt.y, moved: false }; }
+  if (id) { const p = state.pieces.find(q => q.id === id); drag = { id, dx: p.x - pt.x, dy: p.y - pt.y, moved: false, snap: JSON.stringify(state.pieces) }; }
 });
 canvas.addEventListener('pointermove', e => {
   if (orbit) {
@@ -170,7 +164,7 @@ canvas.addEventListener('pointermove', e => {
   if (state.tool && !state.playing) { const c = clampPt(pt, state.tool); ghost.position.set(c.x, c.y, 1); ghost.visible = true; } else ghost.visible = false;
   if (drag && !state.playing) {
     const p = state.pieces.find(q => q.id === drag.id), c = clampPt({ x: pt.x + drag.dx, y: pt.y + drag.dy }, p.t);
-    if (c.x !== p.x || c.y !== p.y) { p.x = c.x; p.y = c.y; drag.moved = true; dirty = true; }
+    if (c.x !== p.x || c.y !== p.y) { if (!drag.moved) { pushHist(drag.snap); } p.x = c.x; p.y = c.y; drag.moved = true; dirty = true; }
   }
 });
 canvas.addEventListener('pointerup', () => { orbit = null; drag = null; });
@@ -178,24 +172,44 @@ canvas.addEventListener('pointerleave', () => { ghost.visible = false; });
 canvas.addEventListener('wheel', e => { e.preventDefault(); cam.dist = Math.max(14, Math.min(60, cam.dist * (e.deltaY > 0 ? 1.08 : 0.92))); }, { passive: false });
 let dirty = false;
 
+// ---------- Historial (desfés / refés) i avisos ----------
+const hist = { u: [], r: [] };
+function pushHist(snap) { hist.u.push(snap); if (hist.u.length > 100) hist.u.shift(); hist.r.length = 0; histUi(); }
+function mutate(fn) { if (state.playing) return; pushHist(JSON.stringify(state.pieces)); fn(); rebuild(); }
+function histUi() { $('btnUndo').disabled = !hist.u.length; $('btnRedo').disabled = !hist.r.length; }
+function undo() {
+  if (!hist.u.length) return;
+  hist.r.push(JSON.stringify(state.pieces)); state.pieces = JSON.parse(hist.u.pop());
+  if (!state.pieces.some(q => q.id === state.sel)) state.sel = null;
+  rebuild(); histUi(); toast('Acció desfeta.');
+}
+function redo() {
+  if (!hist.r.length) return;
+  hist.u.push(JSON.stringify(state.pieces)); state.pieces = JSON.parse(hist.r.pop());
+  if (!state.pieces.some(q => q.id === state.sel)) state.sel = null;
+  rebuild(); histUi(); toast('Acció refeta.');
+}
+function toast(s) { const t = $('toast'); t.textContent = s; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 4500); }
+
 function rotateSel(d) {
   const p = state.pieces.find(q => q.id === state.sel); if (!p || state.playing) return;
-  p.r = ((p.r ?? 0) + d + 360) % 360; rebuild();
+  mutate(() => { p.r = ((p.r ?? 0) + d + 360) % 360; });
 }
-const NOFLIP = new Set(['politja', 'polispast', 'cargol', 'diana', 'bola', 'bolaL', 'bolaP', 'roda', 'caixa', 'noria']);
+const NOFLIP = new Set(['politja', 'polispast', 'cargol', 'diana', 'bola', 'bolaP', 'roda', 'caixa', 'noria']);
 function flipSel(dir) {
   const p = state.pieces.find(q => q.id === state.sel); if (!p || state.playing) return;
   if (NOFLIP.has(p.t)) { say('Aquesta peça és igual pels dos costats: no cal voltejar-la.'); return; }
-  p.m = p.m ? 0 : 1;
-  p.r = (((dir === 'h' ? -(p.r ?? 0) : 180 - (p.r ?? 0)) % 360) + 360) % 360;
-  rebuild();
+  mutate(() => { p.m = p.m ? 0 : 1; p.r = (((dir === 'h' ? -(p.r ?? 0) : 180 - (p.r ?? 0)) % 360) + 360) % 360; });
 }
 function delSel() {
   if (state.playing) return;
-  state.pieces = state.pieces.filter(q => q.id !== state.sel); state.sel = null; rebuild();
+  if (!state.sel) return;
+  mutate(() => { state.pieces = state.pieces.filter(q => q.id !== state.sel); state.sel = null; });
 }
 addEventListener('keydown', e => {
-  if (e.target.tagName === 'TEXTAREA') return;
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || e.key === 'Y')) { e.preventDefault(); redo(); return; }
   if (e.key === 'q' || e.key === 'Q') rotateSel(15);
   else if (e.key === 'e' || e.key === 'E') rotateSel(-15);
   else if (e.key === 'Delete' || e.key === 'Backspace') delSel();
@@ -213,7 +227,7 @@ function pickTool(t) {
   const def = state.tool && CATALOG.find(c => c.t === state.tool);
   $('hint').textContent = def ? `Col·locant: ${def.n} · Per seleccionar peces del tauler, prem 🖱️ Cursor (o Esc)` : '';
 }
-function say(s) { $('status').textContent = s; clearTimeout(say.t); say.t = setTimeout(() => { $('status').textContent = ''; }, 4000); }
+function say(s) { toast(s); }
 function setPlayUi() {
   $('btnPlay').textContent = state.playing ? '⏸ Pausa' : '▶ Engega';
   for (const id of ['btnRotL', 'btnRotR', 'btnFlipH', 'btnFlipV', 'btnDup', 'btnDel', 'btnClear']) $(id).disabled = state.playing;
@@ -225,6 +239,8 @@ $('btnPlay').onclick = () => { state.playing = !state.playing; if (state.playing
 $('btnReset').onclick = () => rebuild();
 $('btnRotL').onclick = () => rotateSel(15);
 $('btnRotR').onclick = () => rotateSel(-15);
+$('btnUndo').onclick = undo;
+$('btnRedo').onclick = redo;
 $('btnFlipH').onclick = () => flipSel('h');
 $('btnFlipV').onclick = () => flipSel('v');
 $('btnCursor').onclick = () => pickTool(null);
@@ -234,30 +250,32 @@ $('btnDel').onclick = delSel;
 $('btnDup').onclick = () => {
   const p = state.pieces.find(q => q.id === state.sel); if (!p || state.pieces.length >= MAXP) return;
   const c = clampPt({ x: p.x + 1, y: p.y + 1 }, p.t);
-  const n = { ...p, id: state.next++, x: c.x, y: c.y }; state.pieces.push(n); state.sel = n.id; rebuild();
+  mutate(() => { const n = { ...p, id: state.next++, x: c.x, y: c.y }; state.pieces.push(n); state.sel = n.id; });
 };
-$('btnClear').onclick = () => { if (!state.pieces.length || confirm('Vols buidar tot el tauler?')) { state.pieces = []; state.sel = null; rebuild(); } };
+$('btnClear').onclick = () => { if (!state.pieces.length || confirm('Vols buidar tot el tauler? (Pots recuperar-lo amb ↩ Desfés.)')) mutate(() => { state.pieces = []; state.sel = null; }); };
 $('btnView').onclick = () => { cam.v3d = !cam.v3d; cam.az = cam.v3d ? -0.25 : 0; cam.el = cam.v3d ? 0.12 : 0; };
 $('btnCinema').onclick = () => { state.cinema = !state.cinema; $('btnCinema').classList.toggle('primary', state.cinema); };
 $('btnShot').onclick = () => {
   renderer.render(scene, camera);
   canvas.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'la-meva-maquina.png'; a.click(); }, 'image/png');
 };
-$('markChk').onchange = () => { ctx.markers.forEach(m => { m.visible = $('markChk').checked; }); };
-if (ANALITZA) { $('markLbl').hidden = false; $('markChk').checked = true; $('status').textContent = 'Mode anàlisi (sessió 2)'; }
 
 // Enllaç de la màquina
 const dlg = $('dialog');
 const closeDlg = () => { dlg.hidden = true; };
 $('dlgCancel').onclick = closeDlg;
-$('btnLink').onclick = async () => {
-  const code = await encodeState(state);
-  const url = location.origin + location.pathname + (ANALITZA ? '?analitza=1' : '') + '#m=' + code;
-  $('dlgTitle').textContent = 'Enllaç de la màquina';
-  $('dlgText').textContent = 'Copia aquest enllaç i posa\'l a la teva presentació. Per carregar la màquina d\'una altra persona, enganxa-hi el seu enllaç i prem «Carrega».';
-  $('dlgArea').readOnly = false; $('dlgArea').value = url; $('dlgImport').hidden = false; dlg.hidden = false;
-  $('dlgArea').focus(); $('dlgArea').select();
-};
+async function openLink(mode) {
+  const share = mode === 'share';
+  $('dlgTitle').textContent = share ? 'Enllaç de la màquina' : 'Carrega una màquina';
+  $('dlgText').textContent = share
+    ? 'Copia aquest enllaç i posa\'l a la teva presentació. Per carregar la màquina d\'una altra persona, enganxa-hi el seu enllaç i prem «Carrega».'
+    : 'Enganxa aquí l\'enllaç de la teva màquina (el que vas guardar a la sessió 1) i prem «Carrega».';
+  $('dlgArea').readOnly = false; $('dlgArea').value = share ? location.origin + location.pathname + '#m=' + await encodeState(state) : '';
+  $('dlgOk').hidden = !share; $('dlgImport').hidden = false; dlg.hidden = false;
+  $('dlgArea').focus(); if (share) $('dlgArea').select();
+}
+$('btnLink').onclick = () => openLink('share');
+$('btnLoad').onclick = () => openLink('load');
 $('dlgOk').onclick = async () => {
   $('dlgArea').select();
   try { await navigator.clipboard.writeText($('dlgArea').value); say('Enllaç copiat.'); } catch (e) { say('Prem Ctrl+C per copiar el text seleccionat.'); }
@@ -267,6 +285,7 @@ $('dlgLoad').onclick = async () => {
     const s = await decodeState($('dlgArea').value);
     const merge = document.querySelector('input[name=imode]:checked').value === 'merge';
     let list = s.pieces.filter(p => CATALOG.some(c => c.t === p.t));
+    pushHist(JSON.stringify(state.pieces));
     if (merge) {
       if (state.zone === 'A') list = list.filter(p => p.x >= MID); else if (state.zone === 'B') list = list.filter(p => p.x < MID);
       state.pieces = state.pieces.concat(list.map(p => ({ ...p, id: state.next++ })));
@@ -274,6 +293,28 @@ $('dlgLoad').onclick = async () => {
     state.pieces = state.pieces.slice(0, MAXP); state.sel = null; closeDlg(); rebuild(); say('Màquina carregada.');
   } catch (e) { say('Aquest enllaç no és vàlid. Comprova que està sencer.'); }
 };
+
+// Mode anàlisi i versió lleugera
+function setAnalyze(on) {
+  state.analyze = on;
+  $('btnAnalyze').classList.toggle('active', on);
+  $('btnAnalyze').textContent = on ? '🔍 Analitzant: tanca l\'anàlisi' : '🔍 Analitza les màquines simples';
+  $('analysis').hidden = !on; $('legend').hidden = !on;
+  ctx.markers.forEach(m => { m.visible = on; });
+  updateSel(); updateCount();
+  if (on) toast('Anàlisi activada: mira P, C i A a les peces i la llista de màquines simples a la dreta.');
+}
+function setLight(on, auto) {
+  light = on; renderer.shadowMap.enabled = !on; sun.castShadow = !on;
+  renderer.setPixelRatio(on ? 1 : Math.min(devicePixelRatio, 1.5)); resize();
+  scene.traverse(o => { if (o.material) o.material.needsUpdate = true; });
+  $('btnLight').classList.toggle('active', on);
+  $('btnLight').textContent = on ? '🐢 Versió lleugera: ACTIVADA (prem per tornar a la normal)' : '🐢 Versió lleugera (si va lent)';
+  try { localStorage.setItem('mq_light', on ? '1' : '0'); } catch (e) { /* res */ }
+  toast(on ? (auto ? 'He activat la versió lleugera perquè anava lent.' : 'Versió lleugera activada.') : 'Versió normal activada.');
+}
+$('btnAnalyze').onclick = () => setAnalyze(!state.analyze);
+$('btnLight').onclick = () => setLight(!light, false);
 
 // ---------- Bucle ----------
 function resize() {
@@ -314,15 +355,17 @@ function frame(now) {
   }
   renderer.render(scene, camera);
   // mode lleuger automàtic
-  if (!light && ++frames > 90) { slow = slow * 0.9 + dt * 1000 * 0.1; if (frames > 200 && slow > 40) { light = true; renderer.shadowMap.enabled = false; sun.castShadow = false; renderer.setPixelRatio(1); resize(); scene.traverse(o => { if (o.material) o.material.needsUpdate = true; }); say('Mode lleuger activat per anar més fluid.'); } }
+  if (!light && ++frames > 90) { slow = slow * 0.9 + dt * 1000 * 0.1; if (frames > 200 && slow > 40) setLight(true, true); }
   else if (frames <= 90) slow = dt * 1000;
 }
 
-renderChallenges($('chList'), done);
+renderChallenges($('chList'), done); histUi();
 (async () => {
   const m = location.hash.match(/#m=(.+)/);
   if (m) { try { const s = await decodeState(m[1]); state.pieces = s.pieces.filter(p => CATALOG.some(c => c.t === p.t)).map(p => ({ ...p, id: state.next++ })); state.task = s.task; $('taskSel').value = s.task; } catch (e) { say('L\'enllaç de la màquina no és vàlid.'); } }
   rebuild();
+  if (light) setLight(true, false); else $('btnLight').textContent = '🐢 Versió lleugera (si va lent)';
+  if (state.analyze) setAnalyze(true);
   requestAnimationFrame(frame);
 })();
 window.__sim = { toScreen: (x, y) => { const v = new THREE.Vector3(x, y, 0).project(camera); const r = canvas.getBoundingClientRect(); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; }, state, rebuild, ctx, cam, TASKS, selBox, shot: () => { renderer.render(scene, camera); return canvas.toDataURL('image/png'); } };

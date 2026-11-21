@@ -27,7 +27,7 @@ function cyl(ctx, r, h, color, x, y, z = 0, axisZ = true) {
 }
 
 function pulley(ctx, p, H, n) {
-  const { compound, reg } = H;
+  const { compound, reg, marker } = H;
   const r = n === 0 ? 1 : 2, mL = 4, T = 3.5, g = 9.82;
   const px = p.x, py = p.y;
   const x0L = px + (n === 0 ? 1.7 : 2.2);
@@ -41,6 +41,9 @@ function pulley(ctx, p, H, n) {
   reg(ctx, p, bs.root, bs.body, { mover: true });
   const ld = compound(ctx, [{ w: 1.4, h: 1.4, c: 0x636e72 }], 0, x0L, y0L, 0, CANNON.Body.KINEMATIC);
   reg(ctx, p, ld.root, ld.body, { mover: true });
+  marker(ctx, bs.root, 'A', 0, 1.35, '#00a36c');
+  marker(ctx, ld.root, 'C', 0, 1.1, '#0984e3');
+  { const pr = new THREE.Object3D(); pr.position.set(px, py, 0); ctx.scene.add(pr); ctx.extra.push(pr); marker(ctx, pr, 'P', 0, 1.1, '#d63031'); }
   const wheel = cyl(ctx, 0.8, 0.5, 0xb2bec3, px, py);
   const post = cyl(ctx, 0.07, 1.4, 0x333333, px, py + 0.7, 0, false); void post;
   wheel.userData.pid = p.id; post.userData.pid = p.id;
@@ -80,7 +83,7 @@ function pulley(ctx, p, H, n) {
 }
 
 function screw(ctx, p, H) {
-  const { compound, reg } = H;
+  const { compound, reg, marker } = H;
   const H0 = 5.5;
   const led = compound(ctx, [
     { w: 2.6, h: 0.25, c: 0xfd9644 },

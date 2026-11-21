@@ -125,8 +125,8 @@ function lever(ctx, p, c) {
   tri.rotation.x = Math.PI / 2; tri.position.set(p.x, p.y - 0.4, -0.1); tri.castShadow = true;
   ctx.scene.add(tri); tri.userData.pid = p.id; ctx.extra.push(tri);
   for (const st of (c.stops || [])) {
-    const side = mm * (Array.isArray(st) ? st[0] : st), dr = Array.isArray(st) ? st[1] : (c.drop || 0);
-    const ex = side * L / 2, wx = cx + rr.c * ex, wy = cy + rr.s * ex;
+    const side = mm * (Array.isArray(st) ? st[0] : st), dr = Array.isArray(st) ? st[1] : (c.drop || 0), ins = Array.isArray(st) ? (st[2] || 0) : 0;
+    const ex = side * (L / 2 - ins), wx = cx + rr.c * ex, wy = cy + rr.s * ex;
     const sb = newBody(0, wx, wy - c.th / 2 - 0.2 - dr, 0);
     sb.addShape(new CANNON.Box(V(0.35, 0.2, 0.5)));
     ctx.world.addBody(sb);
@@ -144,7 +144,9 @@ function lever(ctx, p, c) {
     const wm = new THREE.Mesh(new THREE.BoxGeometry(w[2], w[3], 1), ctx.mat(0x444b57));
     wm.position.copy(wb.position); wm.quaternion.copy(wb.quaternion); ctx.scene.add(wm); wm.userData.pid = p.id; ctx.extra.push(wm);
   }
-  for (const m of (c.marks || [])) marker(ctx, root, m[0], mm * m[1], m[2] ?? 0.5, m[0] === 'F' ? '#d63031' : m[0] === 'C' ? '#0984e3' : '#00a36c');
+  for (const m of (c.marks || [])) marker(ctx, root, m[0], mm * m[1], m[2] ?? 0.5, m[0] === 'P' ? '#d63031' : m[0] === 'C' ? '#0984e3' : '#00a36c');
+  const mk = {}; for (const m of (c.marks || [])) mk[m[0]] = m[1];
+  if (mk.P !== undefined && mk.A !== undefined && mk.C !== undefined) ctx.info[p.id] = { arms: { ba: Math.abs(mk.A - mk.P), bc: Math.abs(mk.C - mk.P) } };
   return { body, root, cx, cy, fx, rr, mm };
 }
 
@@ -191,41 +193,40 @@ const cup = (x) => [
 const LEV = {
   balanci: { L: 6, th: 0.3, f: 0.5, mass: 2, a0: 0, color: 0xf28c28, stops: [-1, 1], drop: 1.0,
     extra: [{ w: 0.18, h: 0.55, c: 0xd9731b, ox: -2.91, oy: 0.28 }, { w: 0.18, h: 0.55, c: 0xd9731b, ox: 2.91, oy: 0.28 }],
-    marks: [['F', 0], ['C', -3], ['E', 3]] },
+    marks: [['P', 0], ['C', -3], ['A', 3]] },
   catapulta: {
     L: 7, th: 0.3, f: 0.75, mass: 0.8, damp: 0.05, wmax: 3.2, a0: 14, color: 0xe55039, stops: [[-1, 0], [1, 1.0]],
     extra: [{ w: 1.3, h: 0.2, c: 0xc0392b, ox: -3.0, oy: 0.25 }, { w: 0.2, h: 0.9, c: 0xc0392b, ox: -3.6, oy: 0.6 }],
-    marks: [['F', 1.75], ['C', -3.0], ['E', 3.3]]
+    marks: [['P', 1.75], ['C', -3.0], ['A', 3.3]]
   },
   tisores: {
     L: 5, th: 0.22, f: 0.56, mass: 1.2, a0: 0, color: 0xc9d3e3, stops: [-1, 1], drop: 0.6,
     extra: [{ w: 1.4, h: 0.12, c: 0xe84393, ox: 1.7, oy: 0.17 }, { w: 0.2, h: 0.7, c: 0xe84393, ox: 2.4, oy: 0.4 }],
-    marks: [['F', 0.3], ['C', -2.4], ['E', 2.2]]
+    marks: [['P', 0.3], ['C', -2.4], ['A', 2.2]]
   },
   carreto: {
-    L: 6, th: 0.3, f: 0, mass: 1.0, a0: -9, color: 0x16a085, stops: [1],
-    extra: [...cup(0.2), { w: 0.9, h: 0.9, c: 0x2d3436, ox: -3.0, oy: -0.5 }],
-    marks: [['F', -3], ['C', 0.2], ['E', 3]]
+    L: 6, th: 0.3, f: 0, mass: 1.0, a0: -9, color: 0x16a085, stops: [[1, 0, 1.3]],
+    extra: [...cup(0.2), { w: 0.6, h: 0.9, c: 0x2d3436, ox: -2.7, oy: -0.5 }],
+    marks: [['P', -3], ['C', 0.2], ['A', 3]]
   },
   porta: {
     L: 3.4, th: 0.25, f: 0, mass: 0.6, damp: 0.5, a0: -90, color: 0x8a5a2b,
     walls: [[-0.27, -0.7, 0.3, 1.0]],
     extra: [{ w: 0.5, h: 0.12, c: 0x5a3a1a, ox: -1.55, oy: 0.18 }, { w: 0.2, h: 0.2, c: 0xf6b93b, ox: 1.2, oy: 0.2 }],
-    marks: [['F', -1.7], ['C', 0], ['E', 1.6]]
+    marks: [['P', -1.7], ['C', 0], ['A', 1.6]]
   },
   martell: {
     L: 5, th: 0.3, f: 0, mass: 3.5, a0: -90, color: 0xb9770e,
-    extra: [{ w: 1.3, h: 1.4, c: 0x566573, ox: 2.4, oy: 0 }], marks: [['F', -2.5], ['C', 2.4], ['E', 0]]
+    extra: [{ w: 1.3, h: 1.4, c: 0x566573, ox: 2.4, oy: 0 }], marks: [['P', -2.5], ['C', 2.4], ['A', 0]]
   },
   bat: {
     L: 6, th: 0.3, f: 0, mass: 1.0, a0: -90, color: 0xd4a76a,
-    extra: [{ w: 2.4, h: 0.75, c: 0xa0763d, ox: 1.8, oy: 0 }], marks: [['F', -3], ['C', 2.4], ['E', -0.2]]
+    extra: [{ w: 2.4, h: 0.75, c: 0xa0763d, ox: 1.8, oy: 0 }], marks: [['P', -3], ['C', 2.4], ['A', -0.2]]
   }
 };
 
 export function buildPiece(ctx, p) {
   switch (p.t) {
-    case 'bolaL': return ball(ctx, p, 0.32, 0.4, 0xffe66d);
     case 'bola': return ball(ctx, p, 0.4, 1, 0xff5e57);
     case 'bolaP': return ball(ctx, p, 0.55, 4.4, 0x2d3436);
     case 'caixa': {
@@ -254,6 +255,6 @@ export function buildPiece(ctx, p) {
     default:
       if (p.t === 'tisores') return scissors(ctx, p);
       if (LEV[p.t]) { lever(ctx, p, LEV[p.t]); return; }
-      return buildMech(ctx, p, { newBody, compound, reg });
+      return buildMech(ctx, p, { newBody, compound, reg, marker });
   }
 }

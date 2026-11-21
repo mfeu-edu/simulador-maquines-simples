@@ -22,7 +22,11 @@
       <option value="B">Tram B (dreta)</option>
     </select>
   </label>
-  <span id="status"></span>
+  <div id="modes">
+    <button id="btnAnalyze" class="mode analyze" title="Mostra quines màquines simples has fet servir i on són P, C i A">🔍 Analitza les màquines simples</button>
+    <button id="btnLoad" class="mode load" title="Recupera una màquina que vas guardar amb el seu enllaç">📂 Carrega una màquina</button>
+    <button id="btnLight" class="mode light" title="Si el programa va lent al teu ordinador, prem aquest botó">🐢 Versió lleugera (si va lent)</button>
+  </div>
 </header>
 
 <main>
@@ -36,7 +40,10 @@
     <canvas id="c"></canvas>
     <div id="toolbar">
       <button id="btnPlay" class="primary">▶ Engega</button>
-      <button id="btnReset">⟲ Reinicia</button>
+      <button id="btnReset" title="Torna les peces a la posició inicial. Cal fer-ho abans d'afegir o moure peces.">⟲ Reinicia</button>
+      <span class="sep"></span>
+      <button id="btnUndo" title="Desfés l'última acció (Ctrl+Z)">↩ Desfés</button>
+      <button id="btnRedo" title="Refés l'acció desfeta (Ctrl+Y)">↪ Refés</button>
       <span class="sep"></span>
       <button id="btnCursor" title="Deixa de col·locar peces i selecciona les del tauler (Esc)">🖱️ Cursor</button>
       <span class="sep"></span>
@@ -54,32 +61,44 @@
       <button id="btnClear">Buida</button>
     </div>
     <div id="hint"></div>
+    <div id="toast" hidden></div>
+    <div id="legend" hidden>
+      <span><i style="background:#d63031">P</i> punt de suport</span>
+      <span><i style="background:#0984e3">C</i> càrrega (Fc)</span>
+      <span><i style="background:#00a36c">A</i> força aplicada (Fa)</span>
+    </div>
     <div id="banner" hidden></div>
     <div id="count"></div>
   </section>
 
   <aside id="side">
-    <section id="help">
-      <h2>Instruccions d'ús</h2>
+    <details id="help">
+      <summary>📖 Instruccions d'ús <small>(clica per desplegar)</small></summary>
       <ul>
         <li><b>Posar peces:</b> tria una peça a l'esquerra i fes clic al tauler. Pots posar-ne diverses seguides.</li>
         <li><b>Seleccionar, moure, duplicar o eliminar:</b> primer prem el botó <b>🖱️ Cursor</b> (o la tecla <b>Esc</b>) perquè deixis de col·locar la peça triada. Després fes clic en una peça del tauler: ja la pots arrossegar, duplicar o eliminar (botons o tecla <b>Supr</b>).</li>
         <li><b>Girar:</b> botons <b>↺ ↻</b> o tecles <b>Q</b> (esquerra) i <b>E</b> (dreta). Cada pulsació gira 15°.</li>
-        <li><b>Voltejar:</b> botons <b>⇋</b> (horitzontal) i <b>⇅</b> (vertical) o tecles <b>H</b> i <b>V</b>. Serveix per posar la catapulta, el carretó, etc. mirant cap a l'altre costat.</li>
-        <li>Les peces només giren dins del pla del tauler, no es poden girar "cap endavant".</li>
+        <li><b>Voltejar:</b> botons <b>⇋</b> (horitzontal) i <b>⇅</b> (vertical) o tecles <b>H</b> i <b>V</b>. Serveix per posar la catapulta, el carretó, etc. mirant cap a l'altre costat. Les peces només giren dins del pla del tauler.</li>
+        <li><b>Desfer errors:</b> <b>↩ Desfés</b> (Ctrl+Z) torna enrere l'última acció, també si has eliminat una peça. <b>↪ Refés</b> (Ctrl+Y) la torna a fer.</li>
+        <li><b>Atenció:</b> per afegir, moure, girar o eliminar peces, la simulació ha d'estar aturada. Si has premut <b>Engega</b>, prem primer <b>⟲ Reinicia</b>.</li>
         <li><b>Vista:</b> botó dret + arrossegar gira la vista; roda del ratolí fa zoom.</li>
-        <li>Prem <b>Engega</b> per veure la màquina en acció i <b>Reinicia</b> per tornar a començar.</li>
-        <li>Selecciona una peça per llegir què fa i com s'utilitza.</li>
+        <li><b>Engega</b> mostra la màquina en acció.</li>
+        <li><b>🔍 Analitza les màquines simples</b> (a dalt): mostra quines màquines simples has fet servir i, a cada peça, on són P (punt de suport), C (càrrega, Fc) i A (força aplicada, Fa).</li>
+        <li><b>Recuperar la teva màquina:</b> obre l'enllaç que vas guardar amb <b>🔗 Enllaç de la màquina</b>, o prem <b>📂 Carrega una màquina</b> i enganxa-hi l'enllaç.</li>
+        <li><b>Va lent?</b> Prem <b>🐢 Versió lleugera</b> (a dalt a la dreta).</li>
       </ul>
+    </details>
+    <section id="inspector">
+      <h2>La peça seleccionada</h2>
+      <div id="insBody">Prem el botó Cursor i fes clic en una peça del tauler.</div>
+    </section>
+    <section id="analysis" hidden>
+      <h2>🔍 Les teves màquines simples</h2>
+      <div id="anaBody"></div>
     </section>
     <section id="challenges">
       <h2>Reptes inicials per practicar</h2>
       <ol id="chList"></ol>
-    </section>
-    <section id="inspector">
-      <h2>La peça seleccionada</h2>
-      <div id="insBody">Prem el botó Cursor i fes clic en una peça del tauler.</div>
-      <label id="markLbl" hidden><input type="checkbox" id="markChk"> Mostra fulcre (F), càrrega (C) i esforç (E)</label>
     </section>
   </aside>
 </main>
@@ -88,7 +107,7 @@
   <div class="box">
     <h2 id="dlgTitle"></h2>
     <p id="dlgText"></p>
-    <textarea id="dlgArea" rows="3" readonly></textarea>
+    <textarea id="dlgArea" rows="3"></textarea>
     <div id="dlgImport" hidden>
       <label><input type="radio" name="imode" value="replace" checked> Substitueix la meva màquina</label><br>
       <label><input type="radio" name="imode" value="merge"> Afegeix el tram del company</label>
