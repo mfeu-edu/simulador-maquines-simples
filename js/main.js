@@ -13,7 +13,7 @@ const DEFROT = { rampa: -20, rampaL: -15 };
 
 const state = { pieces: [], task: 0, zone: 'all', next: 1, sel: null, tool: null, playing: false, won: false, cinema: false };
 const done = new Set();
-try { JSON.parse(localStorage.getItem('mq_ch') || '[]').forEach(i => done.add(i)); } catch (e) { /* res */ }
+try { JSON.parse(localStorage.getItem('mq_ch2') || '[]').forEach(i => done.add(i)); } catch (e) { /* res */ }
 
 // ---------- Escena ----------
 const canvas = $('c');
@@ -56,7 +56,7 @@ const ctx = { scene, world: null, parts: [], extra: [], markers: [], ticks: [], 
 function clearWorld() {
   for (const p of ctx.parts) { scene.remove(p.mesh); p.mesh.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
   for (const e of ctx.extra) { scene.remove(e); e.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
-  Object.assign(ctx, { parts: [], extra: [], markers: [], ticks: [], upds: [], info: {} });
+  Object.assign(ctx, { parts: [], extra: [], markers: [], ticks: [], upds: [], info: {}, goal: null });
 }
 
 function rebuild() {
@@ -86,6 +86,7 @@ function onSuccess() {
   state.won = true;
   const t = TASKS[state.task];
   $('banner').textContent = '🎉 ' + t.ok; $('banner').hidden = false;
+  if (ctx.goal) ctx.goal.win();
   const d = state.pieces.find(p => p.t === 'diana');
   const n = 160, pos = new Float32Array(n * 3), vel = [];
   for (let i = 0; i < n; i++) { pos.set([d.x, d.y + 1, 0.8], i * 3); vel.push([(Math.random() - 0.5) * 9, Math.random() * 9 + 3, (Math.random() - 0.5) * 3]); }
@@ -93,14 +94,14 @@ function onSuccess() {
   const pts = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.28, color: 0xffd25e, depthTest: false }));
   pts.renderOrder = 30; scene.add(pts); conf = { pts, vel, t: 0 };
   CHALLENGES.forEach((c, i) => { if (reqOk(c, state.pieces)) done.add(i); });
-  try { localStorage.setItem('mq_ch', JSON.stringify([...done])); } catch (e) { /* res */ }
+  try { localStorage.setItem('mq_ch2', JSON.stringify([...done])); } catch (e) { /* res */ }
   renderChallenges($('chList'), done);
 }
 
 // ---------- Selecció i inspector ----------
 function updateSel() {
   const p = state.pieces.find(q => q.id === state.sel);
-  if (!p) { selBox.visible = false; $('insBody').textContent = 'Fes clic en una peça del tauler.'; return; }
+  if (!p) { selBox.visible = false; $('insBody').textContent = 'Prem el botó Cursor i fes clic en una peça del tauler.'; return; }
   scene.updateMatrixWorld(true);
   const box = new THREE.Box3();
   scene.traverse(o => { if (o.userData.pid === p.id && o.isMesh) box.expandByObject(o); });
@@ -153,7 +154,7 @@ canvas.addEventListener('pointerdown', e => {
   if (state.tool) {
     if (state.pieces.length >= MAXP) { say('Has arribat al màxim de peces (30).'); return; }
     const c = clampPt(pt, state.tool);
-    const p = { id: state.next++, t: state.tool, x: c.x, y: c.y, r: DEFROT[state.tool] ?? 0 };
+    const p = { id: state.next++, t: state.tool, x: c.x, y: c.y, r: DEFROT[state.tool] ?? 0, m: 0 };
     state.pieces.push(p); state.sel = p.id; rebuild(); return;
   }
   const id = pick(e);
@@ -181,6 +182,14 @@ function rotateSel(d) {
   const p = state.pieces.find(q => q.id === state.sel); if (!p || state.playing) return;
   p.r = ((p.r ?? 0) + d + 360) % 360; rebuild();
 }
+const NOFLIP = new Set(['politja', 'polispast', 'cargol', 'diana', 'bola', 'bolaL', 'bolaP', 'roda', 'caixa', 'noria']);
+function flipSel(dir) {
+  const p = state.pieces.find(q => q.id === state.sel); if (!p || state.playing) return;
+  if (NOFLIP.has(p.t)) { say('Aquesta peça és igual pels dos costats: no cal voltejar-la.'); return; }
+  p.m = p.m ? 0 : 1;
+  p.r = (((dir === 'h' ? -(p.r ?? 0) : 180 - (p.r ?? 0)) % 360) + 360) % 360;
+  rebuild();
+}
 function delSel() {
   if (state.playing) return;
   state.pieces = state.pieces.filter(q => q.id !== state.sel); state.sel = null; rebuild();
@@ -190,24 +199,37 @@ addEventListener('keydown', e => {
   if (e.key === 'q' || e.key === 'Q') rotateSel(15);
   else if (e.key === 'e' || e.key === 'E') rotateSel(-15);
   else if (e.key === 'Delete' || e.key === 'Backspace') delSel();
+  else if (e.key === 'h' || e.key === 'H') flipSel('h');
+  else if (e.key === 'v' || e.key === 'V') flipSel('v');
   else if (e.key === 'Escape') pickTool(null);
 });
 
 // ---------- Interfície ----------
 const pal = buildPalette($('pieceList'), pickTool);
-function pickTool(t) { state.tool = state.tool === t ? null : t; pal.setActive(state.tool); ghost.visible = false; }
+function pickTool(t) {
+  state.tool = (t && state.tool !== t) ? t : null;
+  pal.setActive(state.tool); ghost.visible = false;
+  for (const id of ['btnCursor', 'btnCursorP']) $(id).classList.toggle('on', !state.tool);
+  const def = state.tool && CATALOG.find(c => c.t === state.tool);
+  $('hint').textContent = def ? `Col·locant: ${def.n} · Per seleccionar peces del tauler, prem 🖱️ Cursor (o Esc)` : '';
+}
 function say(s) { $('status').textContent = s; clearTimeout(say.t); say.t = setTimeout(() => { $('status').textContent = ''; }, 4000); }
 function setPlayUi() {
   $('btnPlay').textContent = state.playing ? '⏸ Pausa' : '▶ Engega';
-  for (const id of ['btnRotL', 'btnRotR', 'btnDup', 'btnDel', 'btnClear']) $(id).disabled = state.playing;
+  for (const id of ['btnRotL', 'btnRotR', 'btnFlipH', 'btnFlipV', 'btnDup', 'btnDel', 'btnClear']) $(id).disabled = state.playing;
 }
 TASKS.forEach((t, i) => { const o = document.createElement('option'); o.value = i; o.textContent = `${t.e} ${t.n}`; $('taskSel').appendChild(o); });
 $('taskSel').onchange = e => { state.task = +e.target.value; rebuild(); };
 $('zoneSel').onchange = e => { state.zone = e.target.value; rebuild(); };
-$('btnPlay').onclick = () => { state.playing = !state.playing; if (state.playing) { state.tool = null; pal.setActive(null); } setPlayUi(); };
+$('btnPlay').onclick = () => { state.playing = !state.playing; if (state.playing) pickTool(null); setPlayUi(); };
 $('btnReset').onclick = () => rebuild();
 $('btnRotL').onclick = () => rotateSel(15);
 $('btnRotR').onclick = () => rotateSel(-15);
+$('btnFlipH').onclick = () => flipSel('h');
+$('btnFlipV').onclick = () => flipSel('v');
+$('btnCursor').onclick = () => pickTool(null);
+$('btnCursorP').onclick = () => pickTool(null);
+pickTool(null);
 $('btnDel').onclick = delSel;
 $('btnDup').onclick = () => {
   const p = state.pieces.find(q => q.id === state.sel); if (!p || state.pieces.length >= MAXP) return;
@@ -219,7 +241,7 @@ $('btnView').onclick = () => { cam.v3d = !cam.v3d; cam.az = cam.v3d ? -0.25 : 0;
 $('btnCinema').onclick = () => { state.cinema = !state.cinema; $('btnCinema').classList.toggle('primary', state.cinema); };
 $('btnShot').onclick = () => {
   renderer.render(scene, camera);
-  canvas.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'la-meva-cadena.png'; a.click(); }, 'image/png');
+  canvas.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'la-meva-maquina.png'; a.click(); }, 'image/png');
 };
 $('markChk').onchange = () => { ctx.markers.forEach(m => { m.visible = $('markChk').checked; }); };
 if (ANALITZA) { $('markLbl').hidden = false; $('markChk').checked = true; $('status').textContent = 'Mode anàlisi (sessió 2)'; }
@@ -232,7 +254,7 @@ $('btnLink').onclick = async () => {
   const code = await encodeState(state);
   const url = location.origin + location.pathname + (ANALITZA ? '?analitza=1' : '') + '#m=' + code;
   $('dlgTitle').textContent = 'Enllaç de la màquina';
-  $('dlgText').textContent = 'Copia aquest enllaç i posa\'l a la teva presentació (com a hipervincle de la captura). Per carregar la màquina d\'una altra persona, enganxa-hi el seu enllaç i prem «Carrega».';
+  $('dlgText').textContent = 'Copia aquest enllaç i posa\'l a la teva presentació. Per carregar la màquina d\'una altra persona, enganxa-hi el seu enllaç i prem «Carrega».';
   $('dlgArea').readOnly = false; $('dlgArea').value = url; $('dlgImport').hidden = false; dlg.hidden = false;
   $('dlgArea').focus(); $('dlgArea').select();
 };
@@ -258,7 +280,7 @@ function resize() {
   const r = canvas.parentElement.getBoundingClientRect();
   renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
   const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-  cam.fit = Math.max(W / (2 * t * camera.aspect), HH / (2 * t)) * 1.1;
+  cam.fit = Math.max(W / (2 * t * camera.aspect), HH / (2 * t)) * 1.18;
   if (!cam.set) { cam.dist = cam.fit; cam.set = true; }
 }
 addEventListener('resize', resize); resize();
@@ -275,7 +297,7 @@ function frame(now) {
     sync();
   }
   // càmera
-  let want = new THREE.Vector3(MID, 7.5, 0), dist = cam.dist;
+  let want = new THREE.Vector3(MID, 6.9, 0), dist = cam.dist;
   if (state.cinema && state.playing) {
     let sx = 0, sy = 0, n = 0;
     for (const b of ctx.world.bodies) { const u = b.userData; if (u && u.ball && b.velocity.length() > 0.6) { sx += b.position.x; sy += b.position.y; n++; } }
@@ -303,4 +325,4 @@ renderChallenges($('chList'), done);
   rebuild();
   requestAnimationFrame(frame);
 })();
-window.__sim = { state, rebuild, ctx, cam, TASKS, selBox, shot: () => { renderer.render(scene, camera); return canvas.toDataURL('image/png'); } };
+window.__sim = { toScreen: (x, y) => { const v = new THREE.Vector3(x, y, 0).project(camera); const r = canvas.getBoundingClientRect(); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; }, state, rebuild, ctx, cam, TASKS, selBox, shot: () => { renderer.render(scene, camera); return canvas.toDataURL('image/png'); } };

@@ -1,6 +1,7 @@
 // Politges, polispast, cargol elevador i objectiu final
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
+import { buildGoal } from './goals.js';
 
 const rad = d => d * Math.PI / 180;
 
@@ -116,17 +117,7 @@ function target(ctx, p, H) {
   const { compound, reg } = H;
   const { root, body } = compound(ctx, [{ w: 3.2, h: 0.25, c: 0x6c5ce7, oy: -0.9 }], 0, p.x, p.y, 0);
   reg(ctx, p, root, body);
-  const t = ctx.task, cv = document.createElement('canvas'); cv.width = 320; cv.height = 200;
-  const g = cv.getContext('2d');
-  g.fillStyle = 'rgba(108,92,231,0.35)'; g.strokeStyle = '#a29bfe'; g.lineWidth = 6;
-  g.beginPath(); g.roundRect(6, 6, 308, 188, 22); g.fill(); g.stroke();
-  g.font = '84px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t.e, 160, 70);
-  g.fillStyle = '#fff'; g.font = 'bold 22px sans-serif';
-  const words = t.n.split(' '); let line = '', y = 135;
-  for (const w of words) { const test = line + w + ' '; if (g.measureText(test).width > 280) { g.fillText(line, 160, y); line = w + ' '; y += 26; } else line = test; }
-  g.fillText(line, 160, y);
-  const pl = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 2.0), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv), transparent: true }));
-  pl.position.set(p.x, p.y + 0.1, -0.2); ctx.scene.add(pl); ctx.extra.push(pl); pl.userData.pid = p.id;
+  buildGoal(ctx, p, ctx.task);
   ctx.ticks.push(() => {
     for (const o of ctx.world.bodies) {
       const u = o.userData; if (!u || !u.ball) continue;

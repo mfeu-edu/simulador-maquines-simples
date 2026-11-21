@@ -8,7 +8,7 @@ async function pipe(u8, stream) {
 }
 
 export async function encodeState(state) {
-  const json = JSON.stringify({ v: 1, k: state.task, p: state.pieces.map(q => [q.t, +q.x.toFixed(2), +q.y.toFixed(2), q.r ?? 0]) });
+  const json = JSON.stringify({ v: 1, k: state.task, p: state.pieces.map(q => [q.t, +q.x.toFixed(2), +q.y.toFixed(2), q.r ?? 0, q.m ? 1 : 0]) });
   const raw = new TextEncoder().encode(json);
   if (typeof CompressionStream !== 'undefined') {
     try { return 'z' + b64u(await pipe(raw, new CompressionStream('deflate-raw'))); } catch (e) { /* segueix */ }
@@ -26,5 +26,5 @@ export async function decodeState(code) {
   else throw new Error('format');
   const o = JSON.parse(new TextDecoder().decode(raw));
   if (!o || o.v !== 1 || !Array.isArray(o.p)) throw new Error('versio');
-  return { task: o.k | 0, pieces: o.p.map(a => ({ t: String(a[0]), x: +a[1], y: +a[2], r: +a[3] })) };
+  return { task: o.k | 0, pieces: o.p.map(a => ({ t: String(a[0]), x: +a[1], y: +a[2], r: +a[3], m: a[4] ? 1 : 0 })) };
 }

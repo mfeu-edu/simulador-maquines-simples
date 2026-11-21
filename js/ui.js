@@ -23,16 +23,17 @@ const CLASS_TXT = {
 export function renderInspector(el, piece, info, analitza) {
   const def = CATALOG.find(c => c.t === piece.t);
   let h = `<b>${def.n}</b><br>${def.d}`;
+  if (def.use) h += `<br><br><b>Com s'utilitza:</b> ${def.use}`;
   if (analitza) {
     h += `<br><br>Màquina simple: <b>${def.maq}</b>`;
     if (def.cl) h += `<br>${CLASS_TXT[def.cl]}<br>Quan el braç de l'esforç és més llarg que el de la càrrega, fas menys força.`;
     if (piece.t === 'politja') h += `<br>La politja fixa no redueix la força: només en canvia la direcció.`;
-    if (piece.t === 'polispast') h += `<br>Amb una politja mòbil, la força es divideix per 2: Fa = Fc / (2·n), amb n = 1.`;
+    if (piece.t === 'polispast') h += `<br>Amb una politja mòbil, la força es divideix per 2 (2 cordes sostenen la càrrega): F = P / 2.`;
     if (piece.t === 'cargol') h += `<br>Converteix un moviment de gir en un moviment lineal, lent i amb molta força.`;
     if (piece.t === 'rampa' || piece.t === 'rampaL') h += `<br>Com menys inclinada és, menys força cal però més recorregut.`;
     if (piece.t === 'noria') h += `<br>Roda i eix: una força petita en un radi gran fa girar l'eix.`;
   }
-  if (info && info.need) h += `<br><br>La càrrega pesa 4. Per moure-la, la cistella ha de pesar més de <b>${info.need}</b>. (Bola = 1, bola pesada = 4,4.)`;
+  if (info && info.need) h += `<br><br>La càrrega pesa 4. Per moure-la, la cistella ha de pesar més de <b>${info.need}</b>. (Bola lleugera = 0,4 · normal = 1 · pesada = 4,4. La cistella buida pesa 0,4.)`;
   el.innerHTML = h;
 }
 
@@ -43,7 +44,7 @@ export function reqOk(ch, pieces) {
     const k = alts.split('|').reduce((s, t) => s + (cnt[t] || 0), 0);
     if (k < (n ? +n : 1)) return false;
   }
-  return Object.keys(cnt).filter(t => t !== 'diana').length >= ch.types;
+  return Object.keys(cnt).filter(t => t !== "diana").length >= ch.types;
 }
 
 export function renderChallenges(list, done) {
