@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadena de màquines simples</title>
+<link rel="stylesheet" href="style.css">
+<script type="importmap">
+{"imports":{"three":"./lib/three.module.min.js","cannon-es":"./lib/cannon-es.js"}}
+</script>
+</head>
+<body>
+<header id="top">
+  <h1>⚙️ Cadena de màquines simples</h1>
+  <label>Tasca de la cadena:
+    <select id="taskSel"></select>
+  </label>
+  <label>Tram:
+    <select id="zoneSel">
+      <option value="all">Tot el tauler</option>
+      <option value="A">Tram A (esquerra)</option>
+      <option value="B">Tram B (dreta)</option>
+    </select>
+  </label>
+  <span id="status"></span>
+</header>
+
+<main>
+  <aside id="palette">
+    <h2>Peces</h2>
+    <div id="pieceList"></div>
+  </aside>
+
+  <section id="stage">
+    <canvas id="c"></canvas>
+    <div id="toolbar">
+      <button id="btnPlay" class="primary">▶ Engega</button>
+      <button id="btnReset">⟲ Reinicia</button>
+      <span class="sep"></span>
+      <button id="btnRotL" title="Gira a l'esquerra (Q)">↺</button>
+      <button id="btnRotR" title="Gira a la dreta (E)">↻</button>
+      <button id="btnDup">Duplica</button>
+      <button id="btnDel">Elimina</button>
+      <span class="sep"></span>
+      <button id="btnView">Vista 2D / 3D</button>
+      <button id="btnCinema">🎬 Càmera cinema</button>
+      <button id="btnShot">📷 Captura</button>
+      <button id="btnLink">🔗 Enllaç de la màquina</button>
+      <button id="btnClear">Buida</button>
+    </div>
+    <div id="banner" hidden></div>
+    <div id="count"></div>
+  </section>
+
+  <aside id="side">
+    <section id="challenges">
+      <h2>Reptes</h2>
+      <ol id="chList"></ol>
+    </section>
+    <section id="inspector">
+      <h2>La peça seleccionada</h2>
+      <div id="insBody">Fes clic en una peça del tauler.</div>
+      <label id="markLbl" hidden><input type="checkbox" id="markChk"> Mostra fulcre (F), càrrega (C) i esforç (E)</label>
+    </section>
+    <section id="help">
+      <h2>Com es fa servir</h2>
+      <ul>
+        <li>Tria una peça a l'esquerra i fes clic al tauler per posar-la.</li>
+        <li>Arrossega les peces per moure-les. Gira-les amb Q i E.</li>
+        <li>Botó dret + arrossegar: gira la vista. Roda del ratolí: zoom.</li>
+        <li>Prem <b>Engega</b> per veure la cadena en acció.</li>
+      </ul>
+    </section>
+  </aside>
+</main>
+
+<div id="dialog" hidden>
+  <div class="box">
+    <h2 id="dlgTitle"></h2>
+    <p id="dlgText"></p>
+    <textarea id="dlgArea" rows="3" readonly></textarea>
+    <div id="dlgImport" hidden>
+      <label><input type="radio" name="imode" value="replace" checked> Substitueix la meva màquina</label><br>
+      <label><input type="radio" name="imode" value="merge"> Afegeix el tram del company</label>
+    </div>
+    <div class="row">
+      <button id="dlgOk" class="primary">Copia l'enllaç</button>
+      <button id="dlgLoad">Carrega</button>
+      <button id="dlgCancel">Tanca</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
