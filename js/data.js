@@ -19,7 +19,7 @@ export const TASKS = [
   { e: '🎈', n: 'Trencar un globus', ok: 'Pam! El globus ha petat!', g: 'globus' }
 ];
 
-// cat: categoria; maq: màquina simple (nom tècnic); cl: classe de palanca; use: com s'utilitza (es mostra en seleccionar la peça)
+// cat: categoria; maq: màquina simple (nom tècnic); cl: grau de palanca; use: com s'utilitza (es mostra en seleccionar la peça)
 export const CATALOG = [
   { t: 'bola', cat: 'Per començar', n: 'Bola normal', maq: 'No és una màquina simple (és la càrrega)', d: 'Bola normal (pes 1).' },
   { t: 'bolaP', cat: 'Per començar', n: 'Bola pesada', maq: 'No és una màquina simple (és la càrrega)', d: 'Bola pesada (pes 4,4). Va bé per fer caure sobre una palanca o per omplir la cistella d\'una politja.' },
@@ -29,23 +29,23 @@ export const CATALOG = [
   { t: 'rampaL', cat: 'Rampes i rodes', n: 'Rampa llarga', maq: 'Pla inclinat', d: 'Una rampa més llarga i, per tant, menys costeruda.' },
   { t: 'roda', cat: 'Rampes i rodes', n: 'Roda', maq: 'Roda', d: 'Una roda gran que rodola.' },
   { t: 'noria', cat: 'Rampes i rodes', n: 'Roda de pales', maq: 'Roda i eix', d: 'Una roda amb pales que gira al voltant d\'un eix.' },
-  { t: 'balanci', cat: 'Palanques', n: 'Balancí', maq: 'Palanca de 1a classe', cl: 1,
+  { t: 'balanci', cat: 'Palanques', n: 'Balancí', maq: 'Palanca de 1r grau', cl: 1,
     d: 'Un tauler que bascula pel mig.',
     use: 'Deixa caure una bola pesada a un extrem: l\'altre extrem puja i pot empènyer una altra peça (per exemple, els mànecs del carretó).' },
-  { t: 'catapulta', cat: 'Palanques', n: 'Catapulta', maq: 'Palanca de 1a classe', cl: 1,
+  { t: 'catapulta', cat: 'Palanques', n: 'Catapulta', maq: 'Palanca de 1r grau', cl: 1,
     d: 'Posa una bola a la cullera (esquerra) i deixa caure un pes a l\'extrem curt (dreta): la bola surt disparada.',
     use: 'Posa una bola a la cullera i deixa caure un pes (la bola pesada o la caixa) sobre l\'extrem de la dreta. Com més amunt caigui el pes, més lluny arriba la bola.' },
-  { t: 'tisores', cat: 'Palanques', n: 'Tisores', maq: 'Palanca de 1a classe', cl: 1,
+  { t: 'tisores', cat: 'Palanques', n: 'Tisores', maq: 'Palanca de 1r grau', cl: 1,
     d: 'Tallen la corda que subjecta un pes.',
     use: 'Deixa caure una bola o un pes sobre el mànec rosa (dreta): la fulla de l\'esquerra puja, talla la corda i el pes penjat cau. Posa una rampa o altres peces sota el pes perquè la màquina continuï.' },
-  { t: 'carreto', cat: 'Palanques', n: 'Carretó', maq: 'Palanca de 2a classe', cl: 2,
+  { t: 'carreto', cat: 'Palanques', n: 'Carretó', maq: 'Palanca de 2n grau', cl: 2,
     d: 'Un carretó amb la roda (punt de suport) a l\'esquerra i els mànecs a la dreta.',
-    use: 'Posa-hi una bola a dins. Si s\'alcen els mànecs (dreta), el carretó s\'inclina i la bola surt cap a l\'esquerra. Per alçar els mànecs: col·loca un balancí amb un extrem just sota la punta dels mànecs (a la dreta del petit suport) i deixa caure la bola pesada a l\'altre extrem. També els pot alçar el cargol elevador col·locat sota la punta.' },
-  { t: 'porta', cat: 'Palanques', n: 'Porta batent', maq: 'Palanca de 2a classe', cl: 2,
+    use: 'Posa-hi una bola a dins. Si s\'alcen els mànecs (dreta), el carretó bolca cap endavant i la bola surt cap a l\'esquerra. Per alçar els mànecs: col·loca un balancí amb un extrem just sota la punta dels mànecs (a la dreta del petit suport) i deixa caure la bola pesada a l\'altre extrem. També els pot alçar la càrrega (C) d\'una politja o d\'un polispast col·locada sota la punta dels mànecs, o el cargol elevador.' },
+  { t: 'porta', cat: 'Palanques', n: 'Porta batent', maq: 'Palanca de 2n grau', cl: 2,
     d: 'Una porta penjada per dalt (la frontissa és el punt de suport) que només s\'obre cap a la dreta.',
     use: 'Una bola que ve de l\'esquerra la toca per baix i l\'obre; la porta torna enrere i no deixa passar res en sentit contrari. Col·loca-la perquè l\'extrem de baix quedi a l\'alçada de la bola (la frontissa, uns 3,5 per sobre del terra). També pots empènyer-la amb una altra peça.' },
-  { t: 'martell', cat: 'Palanques', n: 'Martell', maq: 'Palanca de 3a classe', cl: 3, d: 'Penja del mànec. Si el copegen pel mig, el cap pega fort.' },
-  { t: 'bat', cat: 'Palanques', n: 'Bat', maq: 'Palanca de 3a classe', cl: 3, d: 'Un bat llarg que penja i pega a la bola.' },
+  { t: 'martell', cat: 'Palanques', n: 'Martell', maq: 'Palanca de 3r grau', cl: 3, d: 'Penja del mànec. Si el copegen pel mig, el cap pega fort.' },
+  { t: 'bat', cat: 'Palanques', n: 'Bat', maq: 'Palanca de 3r grau', cl: 3, d: 'Un bat llarg que penja i pega a la bola.' },
   { t: 'politja', cat: 'Politges i cargol', n: 'Politja fixa', maq: 'Politja fixa', d: 'Una politja fixa amb un contrapès (pes 4).',
     use: 'La càrrega (C) és el pes de la dreta: Fc = 4. La força aplicada (A) és el pes de la cistella de l\'esquerra: ha de ser més gran que Fc, per això hi has de deixar caure una bola pesada. La politja no redueix la força (Fa = Fc): només en canvia la direcció.' },
   { t: 'polispast', cat: 'Politges i cargol', n: 'Polispast', maq: 'Polispast (politja fixa + politja mòbil)', d: 'Una politja fixa a dalt i una politja mòbil que puja amb el pes (4).',

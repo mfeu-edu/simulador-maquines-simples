@@ -7,7 +7,8 @@ import { encodeState, decodeState } from './link.js';
 
 const $ = id => document.getElementById(id);
 const Q = new URLSearchParams(location.search);
-const W = 28, HH = 16, SNAP = 0.5, MAXP = 30, MID = W / 2;
+const W = 28, HH = 28, SNAP = 0.5, MAXP = 30, MID = W / 2;
+const XMIN = -10, XMAX = 38; // zona on es poden col·locar peces (la zona de la quadrícula inicial va de 0 a 28)
 const DEFROT = { rampa: -20, rampaL: -15 };
 
 const state = { analyze: Q.has('analitza'), pieces: [], task: 0, zone: 'all', next: 1, sel: null, tool: null, playing: false, won: false, cinema: false };
@@ -28,23 +29,24 @@ scene.add(new THREE.HemisphereLight(0xdfeaff, 0x39455e, 0.85));
 const sun = new THREE.DirectionalLight(0xffffff, 0.9);
 sun.position.set(8, 24, 18); sun.castShadow = !light;
 sun.shadow.mapSize.set(1024, 1024);
-Object.assign(sun.shadow.camera, { left: -26, right: 26, top: 20, bottom: -8, near: 1, far: 70 });
+Object.assign(sun.shadow.camera, { left: -36, right: 36, top: 30, bottom: -8, near: 1, far: 80 });
 sun.target.position.set(MID, 4, 0);
 scene.add(sun, sun.target);
 
+const SHW = 70;
 const matCache = {};
 const mat = c => matCache[c] || (matCache[c] = new THREE.MeshLambertMaterial({ color: c }));
 
 // fons estàtic: terra, paret amb quadrícula, línia de tram
-const floor = new THREE.Mesh(new THREE.BoxGeometry(70, 1, 5), mat(0x2f4468));
+const floor = new THREE.Mesh(new THREE.BoxGeometry(100, 1, 5), mat(0x2f4468));
 floor.position.set(MID, -0.5, 0); floor.receiveShadow = true; scene.add(floor);
-const wall = new THREE.Mesh(new THREE.PlaneGeometry(70, 30), mat(0x24365a));
-wall.position.set(MID, 14, -2.6); wall.receiveShadow = true; scene.add(wall);
-const grid = new THREE.GridHelper(70, 70, 0x3c5585, 0x2e4570);
-grid.rotation.x = Math.PI / 2; grid.position.set(MID, 14, -2.55); scene.add(grid);
-const mid = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 22), new THREE.MeshBasicMaterial({ color: 0xffd25e, transparent: true, opacity: 0.35 }));
-mid.position.set(MID, 11, -2.5); scene.add(mid);
-const shade = new THREE.Mesh(new THREE.PlaneGeometry(MID + 8, 40), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.38 }));
+const wall = new THREE.Mesh(new THREE.PlaneGeometry(100, 44), mat(0x24365a));
+wall.position.set(MID, 17, -2.6); wall.receiveShadow = true; scene.add(wall);
+const grid = new THREE.GridHelper(100, 100, 0x3c5585, 0x2e4570);
+grid.rotation.x = Math.PI / 2; grid.position.set(MID, 17, -2.55); scene.add(grid);
+const mid = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 44), new THREE.MeshBasicMaterial({ color: 0xffd25e, transparent: true, opacity: 0.35 }));
+mid.position.set(MID, 17, -2.5); scene.add(mid);
+const shade = new THREE.Mesh(new THREE.PlaneGeometry(SHW, 60), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.38 }));
 shade.position.z = 2.2; shade.visible = false; scene.add(shade);
 const ghost = new THREE.Mesh(new THREE.RingGeometry(0.25, 0.4, 20), new THREE.MeshBasicMaterial({ color: 0xffd25e, depthTest: false }));
 ghost.visible = false; ghost.renderOrder = 20; scene.add(ghost);
@@ -66,13 +68,13 @@ function rebuild() {
   w.solver.iterations = 14; w.allowSleep = false;
   ctx.domMat = new CANNON.Material('domino');
   w.addContactMaterial(new CANNON.ContactMaterial(ctx.domMat, ctx.domMat, { friction: 0.02, restitution: 0 }));
-  const fb = new CANNON.Body({ mass: 0 }); fb.addShape(new CANNON.Box(new CANNON.Vec3(35, 0.5, 2.5))); fb.position.set(MID, -0.5, 0); w.addBody(fb);
+  const fb = new CANNON.Body({ mass: 0 }); fb.addShape(new CANNON.Box(new CANNON.Vec3(50, 0.5, 2.5))); fb.position.set(MID, -0.5, 0); w.addBody(fb);
   ctx.task = TASKS[state.task];
   for (const p of state.pieces) buildPiece(ctx, p);
   state.won = false; state.playing = false; setPlayUi();
   $('banner').hidden = true;
   shade.visible = state.zone !== 'all'; mid.visible = state.zone !== 'all';
-  if (state.zone === 'A') shade.position.x = MID + (MID + 8) / 2; else shade.position.x = MID - (MID + 8) / 2;
+  if (state.zone === 'A') shade.position.x = MID + SHW / 2; else shade.position.x = MID - SHW / 2;
   shade.position.y = 10;
   updateSel(); updateCount(); sync();
 }
@@ -124,7 +126,7 @@ function worldPt(e) {
 }
 const snap = v => Math.round(v / SNAP) * SNAP;
 function clampPt(p, t) {
-  let x = Math.min(W - 0.5, Math.max(0.5, snap(p.x))), y = Math.min(HH, Math.max(0.5, snap(p.y)));
+  let x = Math.min(XMAX, Math.max(XMIN, snap(p.x))), y = Math.min(HH, Math.max(0.5, snap(p.y)));
   if (state.zone === 'A') x = Math.min(x, MID - 0.5);
   if (state.zone === 'B') x = Math.max(x, MID + 0.5);
   if (t === 'politja' || t === 'polispast') y = Math.max(y, 7.5);
@@ -138,11 +140,27 @@ function pick(e) {
   return null;
 }
 let drag = null, orbit = null;
-const cam = { az: -0.25, el: 0.12, dist: 36, tx: MID, ty: 7.5, v3d: true };
+const cam = { az: -0.25, el: 0.12, dist: 36, tx: MID, ty: 7.5, v3d: true, px: 0, py: 0 };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const ptrs = new Map(); let pinch = null, panning = null;
+function panBy(dx, dy) {
+  const r = canvas.getBoundingClientRect();
+  const k = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * (cam.cur ?? cam.dist) / r.height;
+  cam.px = clamp(cam.px - dx * k, -40, 40); cam.py = clamp(cam.py + dy * k, -12, 26);
+}
+function centerView() { cam.px = 0; cam.py = 0; cam.dist = cam.fit; cam.az = -0.25; cam.el = 0.12; }
 
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 canvas.addEventListener('pointerdown', e => {
   canvas.setPointerCapture(e.pointerId);
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (ptrs.size === 2) { // dos dits: zoom i desplaçament de la vista
+    drag = null; orbit = null; panning = null;
+    const [a, b] = [...ptrs.values()];
+    pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, dist: cam.dist, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 }; return;
+  }
+  if (ptrs.size > 2) return;
+  if (e.button === 1 || (e.button === 2 && e.shiftKey)) { panning = { x: e.clientX, y: e.clientY }; return; }
   if (e.button === 2) { orbit = { x: e.clientX, y: e.clientY, az: cam.az, el: cam.el }; return; }
   if (state.playing) { if (state.tool || pick(e)) toast('Per afegir, moure o girar peces, primer prem ⟲ Reinicia: la simulació ha d\'estar aturada.'); return; }
   const pt = worldPt(e);
@@ -153,9 +171,16 @@ canvas.addEventListener('pointerdown', e => {
   }
   const id = pick(e);
   state.sel = id; updateSel();
+  if (!id) panning = { x: e.clientX, y: e.clientY }; // arrossegar el fons mou la vista
   if (id) { const p = state.pieces.find(q => q.id === id); drag = { id, dx: p.x - pt.x, dy: p.y - pt.y, moved: false, snap: JSON.stringify(state.pieces) }; }
 });
 canvas.addEventListener('pointermove', e => {
+  if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch && ptrs.size >= 2) {
+    const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y) || 1, mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    cam.dist = clamp(pinch.dist * pinch.d / d, 8, 90); panBy(mx - pinch.mx, my - pinch.my); pinch.mx = mx; pinch.my = my; return;
+  }
+  if (panning) { panBy(e.clientX - panning.x, e.clientY - panning.y); panning.x = e.clientX; panning.y = e.clientY; return; }
   if (orbit) {
     cam.az = Math.max(-1.1, Math.min(1.1, orbit.az - (e.clientX - orbit.x) * 0.006));
     cam.el = Math.max(-0.1, Math.min(0.8, orbit.el + (e.clientY - orbit.y) * 0.006)); return;
@@ -167,9 +192,11 @@ canvas.addEventListener('pointermove', e => {
     if (c.x !== p.x || c.y !== p.y) { if (!drag.moved) { pushHist(drag.snap); } p.x = c.x; p.y = c.y; drag.moved = true; dirty = true; }
   }
 });
-canvas.addEventListener('pointerup', () => { orbit = null; drag = null; });
+const endPtr = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (!ptrs.size) { orbit = null; drag = null; panning = null; } };
+canvas.addEventListener('pointerup', endPtr);
+canvas.addEventListener('pointercancel', endPtr);
 canvas.addEventListener('pointerleave', () => { ghost.visible = false; });
-canvas.addEventListener('wheel', e => { e.preventDefault(); cam.dist = Math.max(14, Math.min(60, cam.dist * (e.deltaY > 0 ? 1.08 : 0.92))); }, { passive: false });
+canvas.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist * (e.deltaY > 0 ? 1.08 : 0.92), 8, 90); }, { passive: false });
 let dirty = false;
 
 // ---------- Historial (desfés / refés) i avisos ----------
@@ -195,10 +222,11 @@ function rotateSel(d) {
   const p = state.pieces.find(q => q.id === state.sel); if (!p || state.playing) return;
   mutate(() => { p.r = ((p.r ?? 0) + d + 360) % 360; });
 }
-const NOFLIP = new Set(['politja', 'polispast', 'cargol', 'diana', 'bola', 'bolaP', 'roda', 'caixa', 'noria']);
+const NOFLIP = new Set(['cargol', 'diana', 'bola', 'bolaP', 'roda', 'caixa', 'noria']);
 function flipSel(dir) {
   const p = state.pieces.find(q => q.id === state.sel); if (!p || state.playing) return;
   if (NOFLIP.has(p.t)) { say('Aquesta peça és igual pels dos costats: no cal voltejar-la.'); return; }
+  if (dir === 'v' && (p.t === 'politja' || p.t === 'polispast')) { say('Aquesta peça només es pot voltejar horitzontalment (⇋).'); return; }
   mutate(() => { p.m = p.m ? 0 : 1; p.r = (((dir === 'h' ? -(p.r ?? 0) : 180 - (p.r ?? 0)) % 360) + 360) % 360; });
 }
 function delSel() {
@@ -216,6 +244,8 @@ addEventListener('keydown', e => {
   else if (e.key === 'h' || e.key === 'H') flipSel('h');
   else if (e.key === 'v' || e.key === 'V') flipSel('v');
   else if (e.key === 'Escape') pickTool(null);
+  else if (e.key.startsWith('Arrow')) { e.preventDefault(); const k = 40; panBy(e.key === 'ArrowLeft' ? k : e.key === 'ArrowRight' ? -k : 0, e.key === 'ArrowUp' ? k : e.key === 'ArrowDown' ? -k : 0); }
+  else if (e.key === '0' || e.key === 'Home') centerView();
 });
 
 // ---------- Interfície ----------
@@ -239,6 +269,7 @@ $('btnPlay').onclick = () => { state.playing = !state.playing; if (state.playing
 $('btnReset').onclick = () => rebuild();
 $('btnRotL').onclick = () => rotateSel(15);
 $('btnRotR').onclick = () => rotateSel(-15);
+$('btnCenter').onclick = centerView;
 $('btnUndo').onclick = undo;
 $('btnRedo').onclick = redo;
 $('btnFlipH').onclick = () => flipSel('h');
@@ -318,13 +349,16 @@ $('btnLight').onclick = () => setLight(!light, false);
 
 // ---------- Bucle ----------
 function resize() {
-  const r = canvas.parentElement.getBoundingClientRect();
+  const r = canvas.getBoundingClientRect();
+  if (!r.width || !r.height) return;
   renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
   const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-  cam.fit = Math.max(W / (2 * t * camera.aspect), HH / (2 * t)) * 1.18;
+  cam.fit = Math.max(W / (2 * t * camera.aspect), 16 / (2 * t)) * 1.18;
   if (!cam.set) { cam.dist = cam.fit; cam.set = true; }
 }
-addEventListener('resize', resize); resize();
+addEventListener('resize', resize); addEventListener('orientationchange', () => setTimeout(resize, 200));
+if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
+resize();
 let last = performance.now(), acc = 0, slow = 0, frames = 0;
 const tgt = new THREE.Vector3(cam.tx, cam.ty, 0);
 
@@ -338,7 +372,7 @@ function frame(now) {
     sync();
   }
   // càmera
-  let want = new THREE.Vector3(MID, 6.9, 0), dist = cam.dist;
+  let want = new THREE.Vector3(MID + cam.px, 6.9 + cam.py, 0), dist = cam.dist;
   if (state.cinema && state.playing) {
     let sx = 0, sy = 0, n = 0;
     for (const b of ctx.world.bodies) { const u = b.userData; if (u && u.ball && b.velocity.length() > 0.6) { sx += b.position.x; sy += b.position.y; n++; } }

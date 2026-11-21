@@ -54,6 +54,7 @@
       <button id="btnDup">Duplica</button>
       <button id="btnDel">Elimina</button>
       <span class="sep"></span>
+      <button id="btnCenter" title="Torna la vista al centre (tecla 0)">⌖ Centra la vista</button>
       <button id="btnView">Vista 2D / 3D</button>
       <button id="btnCinema">🎬 Càmera cinema</button>
       <button id="btnShot">📷 Captura</button>
@@ -72,22 +73,6 @@
   </section>
 
   <aside id="side">
-    <details id="help">
-      <summary>📖 Instruccions d'ús <small>(clica per desplegar)</small></summary>
-      <ul>
-        <li><b>Posar peces:</b> tria una peça a l'esquerra i fes clic al tauler. Pots posar-ne diverses seguides.</li>
-        <li><b>Seleccionar, moure, duplicar o eliminar:</b> primer prem el botó <b>🖱️ Cursor</b> (o la tecla <b>Esc</b>) perquè deixis de col·locar la peça triada. Després fes clic en una peça del tauler: ja la pots arrossegar, duplicar o eliminar (botons o tecla <b>Supr</b>).</li>
-        <li><b>Girar:</b> botons <b>↺ ↻</b> o tecles <b>Q</b> (esquerra) i <b>E</b> (dreta). Cada pulsació gira 15°.</li>
-        <li><b>Voltejar:</b> botons <b>⇋</b> (horitzontal) i <b>⇅</b> (vertical) o tecles <b>H</b> i <b>V</b>. Serveix per posar la catapulta, el carretó, etc. mirant cap a l'altre costat. Les peces només giren dins del pla del tauler.</li>
-        <li><b>Desfer errors:</b> <b>↩ Desfés</b> (Ctrl+Z) torna enrere l'última acció, també si has eliminat una peça. <b>↪ Refés</b> (Ctrl+Y) la torna a fer.</li>
-        <li><b>Atenció:</b> per afegir, moure, girar o eliminar peces, la simulació ha d'estar aturada. Si has premut <b>Engega</b>, prem primer <b>⟲ Reinicia</b>.</li>
-        <li><b>Vista:</b> botó dret + arrossegar gira la vista; roda del ratolí fa zoom.</li>
-        <li><b>Engega</b> mostra la màquina en acció.</li>
-        <li><b>🔍 Analitza les màquines simples</b> (a dalt): mostra quines màquines simples has fet servir i, a cada peça, on són P (punt de suport), C (càrrega, Fc) i A (força aplicada, Fa).</li>
-        <li><b>Recuperar la teva màquina:</b> obre l'enllaç que vas guardar amb <b>🔗 Enllaç de la màquina</b>, o prem <b>📂 Carrega una màquina</b> i enganxa-hi l'enllaç.</li>
-        <li><b>Va lent?</b> Prem <b>🐢 Versió lleugera</b> (a dalt a la dreta).</li>
-      </ul>
-    </details>
     <section id="inspector">
       <h2>La peça seleccionada</h2>
       <div id="insBody">Prem el botó Cursor i fes clic en una peça del tauler.</div>
@@ -100,6 +85,24 @@
       <h2>Reptes inicials per practicar</h2>
       <ol id="chList"></ol>
     </section>
+    <details id="help">
+      <summary>📖 Instruccions d'ús <small>(clica per desplegar)</small></summary>
+      <ul>
+        <li><b>Posar peces:</b> tria una peça a l'esquerra i fes clic al tauler. Pots posar-ne diverses seguides.</li>
+        <li><b>Seleccionar, moure, duplicar o eliminar:</b> primer prem el botó <b>🖱️ Cursor</b> (o la tecla <b>Esc</b>) perquè deixis de col·locar la peça triada. Després fes clic en una peça del tauler: ja la pots arrossegar, duplicar o eliminar (botons o tecla <b>Supr</b>).</li>
+        <li><b>Girar:</b> botons <b>↺ ↻</b> o tecles <b>Q</b> (esquerra) i <b>E</b> (dreta). Cada pulsació gira 15°.</li>
+        <li><b>Voltejar:</b> botons <b>⇋</b> (horitzontal) i <b>⇅</b> (vertical) o tecles <b>H</b> i <b>V</b>. Serveix per posar la catapulta, el carretó, etc. mirant cap a l'altre costat. Les peces només giren dins del pla del tauler.</li>
+        <li><b>Desfer errors:</b> <b>↩ Desfés</b> (Ctrl+Z) torna enrere l'última acció, també si has eliminat una peça. <b>↪ Refés</b> (Ctrl+Y) la torna a fer.</li>
+        <li><b>Atenció:</b> per afegir, moure, girar o eliminar peces, la simulació ha d'estar aturada. Si has premut <b>Engega</b>, prem primer <b>⟲ Reinicia</b>.</li>
+        <li><b>Moure la vista:</b> arrossega el fons del tauler (amb el Cursor), o les fletxes del teclat, o amb dos dits a la pantalla tàctil. <b>Zoom:</b> roda del ratolí o pessigar amb dos dits. <b>Girar la vista:</b> botó dret del ratolí + arrossegar. <b>⌖ Centra la vista</b> (o tecla 0) ho torna tot al lloc.</li>
+        <li><b>Tauler:</b> pots posar peces més amunt i més enllà dels costats de la quadrícula inicial.</li>
+        <li><b>Engega</b> mostra la màquina en acció.</li>
+        <li><b>🔍 Analitza les màquines simples</b> (a dalt): mostra quines màquines simples has fet servir i, a cada peça, on són P (punt de suport), C (càrrega, Fc) i A (força aplicada, Fa).</li>
+        <li><b>Recuperar la teva màquina:</b> obre l'enllaç que vas guardar amb <b>🔗 Enllaç de la màquina</b>, o prem <b>📂 Carrega una màquina</b> i enganxa-hi l'enllaç.</li>
+        <li><b>Distàncies:</b> cada quadre de la quadrícula mesura <b>1 m</b>.</li>
+        <li><b>Va lent?</b> Prem <b>🐢 Versió lleugera</b> (a dalt a la dreta).</li>
+      </ul>
+    </details>
   </aside>
 </main>
 

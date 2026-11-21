@@ -34,7 +34,6 @@ aside{overflow:auto;padding:8px;background:#121c2e}
 #dialog .box{background:#16233a;border:1px solid #3a4f77;border-radius:12px;padding:18px;width:min(520px,92vw)}
 #dialog textarea{width:100%;background:#0d1626;color:#e8edf5;border:1px solid #3a4f77;border-radius:8px;padding:6px;font-size:12px}
 #dialog .row{display:flex;gap:8px;margin-top:10px;justify-content:flex-end}
-@media(max-width:900px){main{grid-template-columns:150px 1fr}#side{display:none}}
 
 .cursorBtn{background:#2a4a3a;border-color:#4fbf86;font-weight:600;margin-bottom:6px}
 .cursorBtn.on,#btnCursor.on{background:#1f9d62;border-color:#27c07a;color:#fff}
@@ -71,3 +70,36 @@ button.light.active{background:#ffb457;border-color:#fff;color:#2b1700}
 #anaBody .mq span{color:#b8c7e0}
 #anaBody .law{color:#ffd25e}
 #count{top:auto;bottom:70px}
+
+#help{margin:12px 0 0}
+#chList li{line-height:1.35}
+/* ---------- Responsive ---------- */
+@media(max-width:1100px){main{grid-template-columns:150px 1fr 240px}#top h1{font-size:16px}}
+@media(max-width:820px){
+  html,body{height:auto;min-height:100%}
+  body{display:block}
+  #top{gap:6px 10px;padding:6px 10px}
+  #top h1{font-size:15px;width:100%}
+  #top label{font-size:12px}
+  #top select{max-width:46vw}
+  #modes{margin-left:0;width:100%}
+  button.mode{flex:1 1 auto;font-size:12px;padding:7px 8px}
+  main{display:flex;flex-direction:column;min-height:0}
+  #palette{order:1;padding:6px;overflow:visible}
+  #palette h2{display:none}
+  #pieceList{display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+  #pieceList .cat{flex:none;margin:0;align-self:center;white-space:nowrap}
+  #pieceList .pcs{flex:none;width:auto;margin:0;white-space:nowrap;padding:9px 12px}
+  .cursorBtn{display:block;margin-bottom:6px;width:100%}
+  #stage{order:2;display:flex;flex-direction:column}
+  #c{height:52vh;min-height:280px;flex:none}
+  #toolbar{position:static;margin:6px;left:auto;right:auto;bottom:auto}
+  #toolbar button{padding:9px 10px;font-size:13px}
+  #count{bottom:auto;top:6px}
+  #legend{top:6px;right:4px;font-size:11px;flex-wrap:wrap;max-width:60%}
+  #hint{display:none}
+  #side{order:3;overflow:visible}
+}
+@media(pointer:coarse){button,select{min-height:36px}.sep{display:none}}
+#anaBody .mq.good{border-left:4px solid #1f9d62}
+#anaBody .mq.bad{border-left:4px solid #6b7a99}

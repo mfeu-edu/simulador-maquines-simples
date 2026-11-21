@@ -17,3 +17,5 @@ Llibreries incloses (carpeta `lib/`): [three.js](https://threejs.org) i [cannon-
 - Botons destacats: Analitza les màquines simples, Carrega una màquina i Versió lleugera.
 - Desfés / Refés (Ctrl+Z / Ctrl+Y). Nomenclatura P, C (Fc), A (Fa).
 - Per afegir o moure peces cal prémer Reinicia (simulació aturada).
+- Tauler ampliat, vista que es pot moure (arrossegar el fons, fletxes, dos dits), responsive (mòbil/tauleta).
+- Anàlisi bàsica: només P, C, A i si una peça és màquina simple (comptador: mínim 5, una palanca).

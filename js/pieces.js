@@ -113,6 +113,12 @@ function lever(ctx, p, c) {
   const cx = p.x - (rr.c * fx), cy = p.y - (rr.s * fx);
   const shapes = [{ w: L, h: c.th, c: c.color }, ...(c.extra || []).map(e => ({ ...e, ox: mm * (e.ox ?? 0) }))];
   const { root, body } = compound(ctx, shapes, c.mass, cx, cy, ang);
+  for (const v of (c.vis || [])) { // peces només visuals (no xoquen): [w,h,color,ox,oy] o rodes {wheel:r}
+    let m;
+    if (v.wheel) { m = new THREE.Mesh(new THREE.CylinderGeometry(v.wheel, v.wheel, 0.7, 24), ctx.mat(v.c)); m.rotation.x = Math.PI / 2; }
+    else m = new THREE.Mesh(new THREE.BoxGeometry(v.w, v.h, v.d ?? 0.8), ctx.mat(v.c));
+    m.position.set(mm * (v.ox ?? 0), v.oy ?? 0, v.z ?? 0); if (v.rot) m.rotation.z = mm * rad(v.rot); m.castShadow = true; root.add(m);
+  }
   body.angularDamping = c.damp ?? 0.35;
   reg(ctx, p, root, body, { lever: true });
   if (c.wmax) ctx.ticks.push(() => { const w = body.angularVelocity.z; if (Math.abs(w) > c.wmax) body.angularVelocity.z = Math.sign(w) * c.wmax; });
@@ -121,6 +127,17 @@ function lever(ctx, p, c) {
   ctx.world.addConstraint(new CANNON.HingeConstraint(anchor, body, {
     pivotA: V(0, 0, 0), axisA: V(0, 0, 1), pivotB: V(fx, 0, 0), axisB: V(0, 0, 1)
   }));
+  if (c.rest) { // topall «virtual»: la palanca no pot baixar per sota de l'angle de repòs (sense cap bloc que destorbi)
+    const th0 = rad(ang), nrm = a => Math.atan2(Math.sin(a), Math.cos(a));
+    ctx.ticks.push(() => {
+      const q = body.quaternion, th = 2 * Math.atan2(q.z, q.w);
+      if (nrm(th - th0) * mm < 0) {
+        body.quaternion.setFromAxisAngle(V(0, 0, 1), th0);
+        body.position.set(p.x - fx * Math.cos(th0), p.y - fx * Math.sin(th0), 0);
+        if (body.angularVelocity.z * mm < 0) body.angularVelocity.z = 0;
+      }
+    });
+  }
   const tri = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.55, 1.0, 3), ctx.mat(0x444b57));
   tri.rotation.x = Math.PI / 2; tri.position.set(p.x, p.y - 0.4, -0.1); tri.castShadow = true;
   ctx.scene.add(tri); tri.userData.pid = p.id; ctx.extra.push(tri);
@@ -191,9 +208,9 @@ const cup = (x) => [
 ];
 
 const LEV = {
-  balanci: { L: 6, th: 0.3, f: 0.5, mass: 2, a0: 0, color: 0xf28c28, stops: [-1, 1], drop: 1.0,
-    extra: [{ w: 0.18, h: 0.55, c: 0xd9731b, ox: -2.91, oy: 0.28 }, { w: 0.18, h: 0.55, c: 0xd9731b, ox: 2.91, oy: 0.28 }],
-    marks: [['P', 0], ['C', -3], ['A', 3]] },
+  balanci: { L: 8, th: 0.3, f: 0.5, mass: 2, a0: 0, color: 0xf28c28, stops: [-1, 1], drop: 1.5,
+    extra: [{ w: 0.18, h: 0.55, c: 0xd9731b, ox: -3.91, oy: 0.28 }, { w: 0.18, h: 0.55, c: 0xd9731b, ox: 3.91, oy: 0.28 }],
+    marks: [['P', 0], ['C', -4], ['A', 4]] },
   catapulta: {
     L: 7, th: 0.3, f: 0.75, mass: 0.8, damp: 0.05, wmax: 3.2, a0: 14, color: 0xe55039, stops: [[-1, 0], [1, 1.0]],
     extra: [{ w: 1.3, h: 0.2, c: 0xc0392b, ox: -3.0, oy: 0.25 }, { w: 0.2, h: 0.9, c: 0xc0392b, ox: -3.6, oy: 0.6 }],
@@ -205,8 +222,16 @@ const LEV = {
     marks: [['P', 0.3], ['C', -2.4], ['A', 2.2]]
   },
   carreto: {
-    L: 6, th: 0.3, f: 0, mass: 1.0, a0: -9, color: 0x16a085, stops: [[1, 0, 1.3]],
-    extra: [...cup(0.2), { w: 0.6, h: 0.9, c: 0x2d3436, ox: -2.7, oy: -0.5 }],
+    L: 6, th: 0.3, f: 0, mass: 1.0, a0: -3, color: 0x16a085, rest: true,
+    extra: cup(0.2),
+    vis: [
+      { w: 2.3, h: 0.45, c: 0x1abc9c, ox: 0.15, oy: 0.1, rot: 0 },
+      { w: 0.9, h: 0.4, c: 0x1abc9c, ox: -1.2, oy: 0.28, rot: 25 },
+      { wheel: 0.62, c: 0x2d3436, ox: -2.6, oy: -0.15, z: 0 },
+      { wheel: 0.22, c: 0xdfe6e9, ox: -2.6, oy: -0.15, z: 0.1 },
+      { w: 0.7, h: 0.3, c: 0x2d3436, ox: 2.75, oy: 0.1 },
+      { w: 0.22, h: 1.0, c: 0x636e72, ox: 1.9, oy: -0.6, rot: 8 }
+    ],
     marks: [['P', -3], ['C', 0.2], ['A', 3]]
   },
   porta: {

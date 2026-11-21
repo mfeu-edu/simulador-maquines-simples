@@ -30,9 +30,10 @@ function pulley(ctx, p, H, n) {
   const { compound, reg, marker } = H;
   const r = n === 0 ? 1 : 2, mL = 4, T = 3.5, g = 9.82;
   const px = p.x, py = p.y;
-  const x0L = px + (n === 0 ? 1.7 : 2.2);
+  const sg = p.m ? -1 : 1; // p.m = 1: peça voltejada (cistella a la dreta, càrrega a l'esquerra)
+  const x0L = px + sg * (n === 0 ? 1.7 : 2.2);
   const y0E = py - 2.4, y0L = py - 5.9;
-  const bx = px - 1.7;
+  const bx = px - sg * 1.7;
   const bs = compound(ctx, [
     { w: 2.2, h: 0.25, c: 0x00b894 },
     { w: 0.2, h: 1.1, c: 0x00b894, ox: -1.0, oy: 0.6 },
@@ -63,10 +64,10 @@ function pulley(ctx, p, H, n) {
   const upd = () => {
     const ey = bs.body.position.y, ly = ld.body.position.y;
     if (n === 0) {
-      setLine(rope, [[px - 0.8, py], [bx, ey + 1.15], [px + 0.8, py], [x0L, ly + 0.7]]);
+      setLine(rope, [[px - sg * 0.8, py], [bx, ey + 1.15], [px + sg * 0.8, py], [x0L, ly + 0.7]]);
     } else {
       mov.position.y = ly + 1.1;
-      setLine(rope, [[px - 0.8, py], [bx, ey + 1.15], [px + 0.8, py], [x0L - 0.4, ly + 1.1], [x0L + 0.4, ly + 1.1], [x0L + 0.4, py]]);
+      setLine(rope, [[px - sg * 0.8, py], [bx, ey + 1.15], [px + sg * 0.8, py], [x0L - sg * 0.4, ly + 1.1], [x0L + sg * 0.4, ly + 1.1], [x0L + sg * 0.4, py]]);
     }
   };
   ctx.upds.push(upd);
